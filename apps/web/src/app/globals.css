@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@source "../../../../libs/ui/src/**/*.{ts,tsx}";
+@source "../../src/**/*.{ts,tsx}";
+
 
 @theme {
   --color-border: hsl(var(--border));

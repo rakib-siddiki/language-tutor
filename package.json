@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "dev:web": "nx serve web",
+    "dev:web": "nx serve web --port=3000",
     "dev:api": "nx serve api",
     "build:web": "nx build web",
     "build:api": "nx build api",
@@ -19,6 +19,7 @@
     "@nx/next": "22.7.5",
     "@nx/node": "22.7.5",
     "@nx/workspace": "22.7.5",
+    "next": "15.3.3",
     "@swc-node/jest": "^1.9.1",
     "@swc-node/register": "~1.10.9",
     "@swc/core": "~1.10.14",
