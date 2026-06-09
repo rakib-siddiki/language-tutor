@@ -4,7 +4,14 @@ export default {
   displayName: 'api',
   preset: '../../jest.preset.js',
   transform: {
-    '^.+\\.[tj]sx?$': ['@swc-node/jest', { swcrc: false }],
+    '^.+\\.[tj]sx?$': [
+      '@swc-node/jest',
+      {
+        swcrc: false,
+        experimentalDecorators: true,
+        emitDecoratorMetadata: true,
+      },
+    ],
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
   coverageDirectory: '../../coverage/apps/api',
