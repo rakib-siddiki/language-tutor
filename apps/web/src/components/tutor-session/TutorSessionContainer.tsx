@@ -52,13 +52,41 @@ export default function TutorSessionContainer({
   const [state, dispatch] = useSessionReducer();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrlRef = useRef<string | null>(null);
+  const [usingBrowserVoice, setUsingBrowserVoice] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
 
-  // Clean up audio on unmount
+  // Proactive mic permission request and cleanup on unmount
   useEffect(() => {
+    if (typeof window !== 'undefined' && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then((stream) => {
+          stream.getTracks().forEach((track) => track.stop());
+        })
+        .catch((err) => {
+          console.warn('Proactive microphone request denied:', err);
+        });
+    }
+
     return () => {
       cleanupAudio();
     };
   }, []);
+
+  // 429 Rate limit countdown timer effect
+  useEffect(() => {
+    if (countdown === null) return;
+    if (countdown <= 0) {
+      setCountdown(null);
+      dispatch({ type: 'RESET_ERROR' });
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setCountdown((c) => (c !== null ? c - 1 : null));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [countdown]);
 
   const cleanupAudio = () => {
     if (audioRef.current) {
@@ -68,6 +96,10 @@ export default function TutorSessionContainer({
     if (audioUrlRef.current) {
       URL.revokeObjectURL(audioUrlRef.current);
       audioUrlRef.current = null;
+    }
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setUsingBrowserVoice(false);
     }
   };
 
@@ -93,12 +125,38 @@ export default function TutorSessionContainer({
     dispatch({ type: 'AUDIO_ENDED' });
   };
 
-  const playBase64Audio = (base64Audio: string) => {
+  const playBase64Audio = (base64Audio: string, fallbackText: string) => {
     cleanupAudio();
 
     if (!base64Audio) {
-      // If no audio is returned, transition back to idle immediately
-      dispatch({ type: 'AUDIO_ENDED' });
+      // Fallback to browser SpeechSynthesis
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        setUsingBrowserVoice(true);
+        window.speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(fallbackText);
+        const voices = window.speechSynthesis.getVoices();
+        const locale = config.voice.substring(0, 5); // 'en-US'
+        const matchedVoice = voices.find(v => v.lang.toLowerCase().startsWith(locale.toLowerCase()));
+        if (matchedVoice) {
+          utterance.voice = matchedVoice;
+        }
+
+        utterance.onend = () => {
+          setUsingBrowserVoice(false);
+          dispatch({ type: 'AUDIO_ENDED' });
+        };
+        utterance.onerror = (e) => {
+          console.error('Browser SpeechSynthesis error:', e);
+          setUsingBrowserVoice(false);
+          dispatch({ type: 'AUDIO_ENDED' });
+        };
+
+        dispatch({ type: 'AUDIO_PLAYING' });
+        window.speechSynthesis.speak(utterance);
+      } else {
+        dispatch({ type: 'AUDIO_ENDED' });
+      }
       return;
     }
 
@@ -203,9 +261,15 @@ export default function TutorSessionContainer({
         tutorMessage,
       });
 
-      playBase64Audio(result.audioBase64);
+      playBase64Audio(result.audioBase64, result.tutorText);
     } catch (err: any) {
       console.error('Tutor chat loop error:', err);
+      
+      const isRateLimit = err.message?.includes('429') || err.message?.toLowerCase().includes('rate limit');
+      if (isRateLimit) {
+        setCountdown(60);
+      }
+
       dispatch({
         type: 'API_ERROR',
         error: err.message || 'Network error connecting to the speaking examiner.',
@@ -280,8 +344,18 @@ export default function TutorSessionContainer({
         </div>
       </div>
 
+      {/* Rate Limit Alert */}
+      {countdown !== null && (
+        <Alert variant="destructive" className="mb-4 shrink-0 animate-pulse">
+          <AlertTitle>Rate Limit Active</AlertTitle>
+          <AlertDescription>
+            Gemini free-tier rate limit hit. Please pause speaking for <strong>{countdown} seconds</strong>.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* API Errors Alert */}
-      {state.error && (
+      {state.error && countdown === null && (
         <Alert variant="destructive" className="mb-4 shrink-0 animate-shake">
           <AlertTitle className="flex justify-between items-center">
             Connection Interrupted
@@ -320,11 +394,16 @@ export default function TutorSessionContainer({
                     {state.audioPaused ? <VolumeX className="h-5 w-5 animate-pulse" /> : <Volume2 className="h-5 w-5 animate-bounce" />}
                   </div>
                   <div>
-                    <h4 className="font-outfit font-bold text-sm">
+                    <h4 className="font-outfit font-bold text-sm flex items-center gap-1.5">
                       {state.audioPaused ? 'Tutor Paused' : 'Tutor Speaking...'}
+                      {usingBrowserVoice && (
+                        <Badge variant="outline" className="text-[9px] py-0 px-1.5 border-orange-500/35 bg-orange-500/5 text-orange-500 font-sans">
+                          Browser Voice
+                        </Badge>
+                      )}
                     </h4>
                     <p className="text-[10px] text-muted-foreground font-sans">
-                      Listen to the examiner's response.
+                      {usingBrowserVoice ? 'Using browser SpeechSynthesis fallback.' : "Listen to the examiner's response."}
                     </p>
                   </div>
                 </div>
