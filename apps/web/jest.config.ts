@@ -1,7 +1,6 @@
-import type { Config } from 'jest';
 import { resolve } from 'path';
 
-const config: Config = {
+export default {
   displayName: 'web',
   preset: '../../jest.preset.js',
   transform: {
@@ -17,5 +16,3 @@ const config: Config = {
   },
   setupFilesAfterFramework: ['@testing-library/jest-dom'],
 };
-
-export default config;

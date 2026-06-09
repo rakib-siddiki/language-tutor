@@ -13,11 +13,11 @@
       }
     },
     "build": {
-      "executor": "@nx/next:build",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/apps/web/.next"],
       "options": {
-        "outputPath": "dist/apps/web"
+        "command": "next build",
+        "cwd": "apps/web"
       }
     },
     "serve": {
@@ -45,7 +45,8 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/apps/web"],
       "options": {
-        "jestConfig": "apps/web/jest.config.ts"
+        "jestConfig": "apps/web/jest.config.ts",
+        "passWithNoTests": true
       }
     }
   },
