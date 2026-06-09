@@ -1,4 +1,4 @@
-// Placeholder types — full implementation in Issue #2
+// Shared TypeScript types for the Real-Time Conversational Language Tutor
 export type ConversationMode = 'ielts' | 'business' | 'casual';
 
 export type ConversationTurn = {

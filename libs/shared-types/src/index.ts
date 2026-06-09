@@ -1,2 +1,2 @@
-// Placeholder — full types implemented in Issue #2
+// Shared TypeScript types for web and api applications
 export * from './types';
