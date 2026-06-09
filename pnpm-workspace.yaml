@@ -1,0 +1,13 @@
+packages:
+  - apps/*
+  - libs/*
+
+autoInstallPeers: true
+
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - '@swc/core'
+  - less
+  - nx
+  - sharp
+  - unrs-resolver
