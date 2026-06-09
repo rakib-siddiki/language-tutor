@@ -1,7 +1,6 @@
-import type { Config } from 'jest';
 import { resolve } from 'path';
 
-const config: Config = {
+export default {
   displayName: 'api',
   preset: '../../jest.preset.js',
   transform: {
@@ -14,5 +13,3 @@ const config: Config = {
     '@language-tutor/shared-types': resolve(__dirname, '../../libs/shared-types/src/index.ts'),
   },
 };
-
-export default config;
