@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { Card, CardContent, Badge, Separator } from '@language-tutor/ui';
+import { Card, CardContent, Badge, Separator } from '@/components/ui';
 import { Sparkles, User, AlertTriangle, BookOpen, VolumeX } from 'lucide-react';
 
 export interface Message {

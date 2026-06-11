@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useAudioRecorder } from './useAudioRecorder';
-import { Button, Alert, AlertTitle, AlertDescription } from '@language-tutor/ui';
+import { Button, Alert, AlertTitle, AlertDescription } from '@/components/ui';
 import { Mic, Square, Loader2, AlertCircle } from 'lucide-react';
 
 interface AudioRecorderContainerProps {

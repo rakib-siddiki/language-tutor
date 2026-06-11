@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter, Button } from '@language-tutor/ui';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter, Button } from '@/components/ui';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface ErrorProps {

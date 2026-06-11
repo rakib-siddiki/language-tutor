@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, Outfit, Geist } from 'next/font/google';
 import './globals.css';
-import { cn } from "@language-tutor/ui";
+import { cn } from "@/components/ui";
 import { ThemeProvider } from '../components/theme-provider';
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
@@ -35,7 +35,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
       <body className={`${inter.variable} ${outfit.variable} font-sans antialiased`}>
-        <ThemeProvider defaultTheme="system" storageKey="tutor-theme">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+          storageKey="tutor-theme"
+        >
           {children}
         </ThemeProvider>
       </body>

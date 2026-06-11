@@ -17,8 +17,7 @@
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./src/*"],
-      "@language-tutor/shared-types": ["../../libs/shared-types/src/index.ts"],
-      "@language-tutor/ui": ["../../libs/ui/src/index.ts"]
+      "@language-tutor/shared-types": ["../../libs/shared-types/src/index.ts"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

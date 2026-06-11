@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter, Button } from '@language-tutor/ui';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter, Button } from '@/components/ui';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 const inter = Inter({

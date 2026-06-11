@@ -18,7 +18,7 @@ import {
   AlertDescription,
   Badge,
   Separator
-} from '@language-tutor/ui';
+} from '@/components/ui';
 import { 
   Sparkles, 
   Volume2, 

@@ -5,7 +5,7 @@ import Header from '../components/header';
 import { SessionSetupContainer } from '../components/session-setup';
 import { TutorSessionContainer } from '../components/tutor-session';
 import { EvaluationDashboardContainer } from '../components/evaluation-dashboard';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Button, Badge } from '@language-tutor/ui';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Button, Badge } from '@/components/ui';
 import { ConversationMode, ConversationTurn } from '@language-tutor/shared-types';
 import { Sparkles, MessageSquare, Volume2, ArrowLeft, ArrowRight } from 'lucide-react';
 
@@ -38,6 +38,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col font-sans">
+      <div className="bg-mesh" aria-hidden="true" />
       <Header />
       
       <main className="flex-1 flex flex-col py-6">

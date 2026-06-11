@@ -11,7 +11,7 @@ import {
   Button, 
   Badge, 
   Skeleton 
-} from '@language-tutor/ui';
+} from '@/components/ui';
 import { 
   Trophy, 
   TrendingUp, 
