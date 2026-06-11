@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
+    "dev": "concurrently \"pnpm:dev:web\" \"pnpm:dev:api\"",
     "dev:web": "nx serve web --port=3000",
     "dev:api": "nx serve api",
     "build:web": "nx build web",
