@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { Card, CardContent, Badge, Separator } from '@/components/ui';
+import { Badge } from '@/components/ui';
 import { Sparkles, User, AlertTriangle, BookOpen, VolumeX } from 'lucide-react';
 
 export interface Message {
@@ -101,15 +101,9 @@ export default function ConversationPaneContainer({
       }
 
       elements.push(
-        <span key={`match-${idx}`} className="relative group inline-block cursor-help mx-0.5">
+        <span key={`match-${idx}`} className="inline-block mx-0.5">
           <span className="line-through text-destructive font-semibold decoration-wavy decoration-destructive/60 decoration-2">
             {match.original}
-          </span>
-          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-lg border border-border bg-popover text-popover-foreground shadow-xl text-xs opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
-            <span className="font-bold text-emerald-500 flex items-center gap-1 mb-1">
-              <Sparkles className="h-3 w-3" /> Correct: {match.corrected}
-            </span>
-            <span className="text-muted-foreground block leading-relaxed">{match.explanation}</span>
           </span>
         </span>
       );
@@ -125,7 +119,7 @@ export default function ConversationPaneContainer({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 border border-border/30 bg-card/20 backdrop-blur-sm rounded-xl overflow-hidden w-full">
+    <div className="flex-1 flex flex-col min-h-0 border border-border/30 bg-card/20 backdrop-blur-sm rounded-xl overflow-hidden w-full h-full">
       {/* Scrollable Conversation Viewport */}
       <div 
         ref={containerRef}
@@ -143,6 +137,7 @@ export default function ConversationPaneContainer({
         ) : (
           messages.map((message) => {
             const isTutor = message.role === 'tutor';
+            const hasCorrections = !isTutor && showCorrections && message.corrections && message.corrections.length > 0;
             
             return (
               <div 
@@ -161,72 +156,109 @@ export default function ConversationPaneContainer({
                 </div>
 
                 {/* Bubble Container */}
-                <div className="space-y-1.5 flex flex-col">
+                <div className="space-y-2 flex flex-col min-w-0">
                   {/* Bubble */}
-                  <div className={`p-4 rounded-2xl ${
+                  <div className={`p-4 rounded-2xl shadow-sm ${
                     isTutor 
-                      ? 'bg-card text-card-foreground rounded-tl-none border border-border/30' 
-                      : 'bg-primary text-primary-foreground rounded-tr-none shadow-md shadow-primary/5'
+                      ? 'bg-card text-card-foreground rounded-tl-none border border-border/40' 
+                      : 'bg-primary text-primary-foreground rounded-tr-none shadow-md shadow-primary/10'
                   }`}>
                     {isTutor ? (
-                      <span className="font-sans text-sm md:text-base leading-relaxed">{message.text}</span>
+                      <span className="font-sans text-sm md:text-base leading-relaxed font-normal">{message.text}</span>
                     ) : (
                       renderHighlightedText(message.text, message.corrections)
                     )}
                   </div>
 
-                  {/* Corrections & Suggestions Drawer (Only for User message & if enabled) */}
+                  {/* ── Grammar Corrections Card ── */}
+                  {hasCorrections && (
+                    <div className="rounded-xl border border-destructive/15 bg-destructive/5 dark:bg-destructive/10 p-3.5 space-y-3 border-l-4 border-l-destructive/60 animate-slide-up">
+                      <p className="text-[10px] uppercase tracking-wider font-bold text-destructive/90 flex items-center gap-1.5">
+                        <AlertTriangle className="h-3.5 w-3.5" /> Grammar Corrections
+                      </p>
+                      <div className="space-y-2">
+                        {message.corrections!.map((c, idx) => (
+                          <div key={idx} className="space-y-1">
+                            {/* original → corrected row */}
+                            <div className="flex flex-wrap items-center gap-1.5 text-xs font-semibold">
+                              <span className="line-through text-destructive decoration-wavy decoration-1">
+                                {c.original}
+                              </span>
+                              <span className="text-muted-foreground/60 text-[10px]">→</span>
+                              <span className="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 dark:bg-emerald-400/10 px-1.5 py-0.5 rounded text-[11px]">
+                                {c.corrected}
+                              </span>
+                            </div>
+                            {/* explanation */}
+                            <p className="text-[11px] text-muted-foreground leading-relaxed pl-0.5 font-sans">
+                              {c.explanation}
+                            </p>
+                            {/* divider between multiple corrections */}
+                            {idx < message.corrections!.length - 1 && (
+                              <div className="border-t border-border/30 pt-2 mt-2" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Vocabulary & Pronunciation (Only for User message & if enabled) */}
                   {!isTutor && showCorrections && (
                     <div className="space-y-2 px-1">
                       {/* Vocabulary Suggestions */}
                       {message.vocabularySuggestions && message.vocabularySuggestions.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                          <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                          <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5 shrink-0">
                             <BookOpen className="h-3 w-3" /> Vocabulary:
                           </span>
-                          {message.vocabularySuggestions.map((suggestion, idx) => (
-                            <span 
-                              key={idx} 
-                              className="relative group inline-block"
-                            >
-                              <Badge 
-                                variant="outline" 
-                                className="text-[10px] cursor-help bg-secondary/30 hover:bg-primary/10 border-primary/20 text-foreground font-medium"
+                          <div className="flex flex-wrap gap-1.5">
+                            {message.vocabularySuggestions.map((suggestion, idx) => (
+                              <span 
+                                key={idx} 
+                                className="relative group inline-block"
                               >
-                                {suggestion.original} → {suggestion.suggestion}
-                              </Badge>
-                              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2 rounded-lg border border-border bg-popover text-popover-foreground shadow-xl text-[10px] opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50">
-                                <span className="font-bold text-primary block mb-0.5">Use in Context:</span>
-                                <span className="text-muted-foreground block leading-relaxed">"{suggestion.context}"</span>
+                                <Badge 
+                                  variant="outline" 
+                                  className="text-[10px] cursor-help bg-secondary/40 hover:bg-primary/10 border-primary/20 text-foreground font-medium px-2 py-0.5 rounded-full transition-colors"
+                                >
+                                  {suggestion.original} → {suggestion.suggestion}
+                                </Badge>
+                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 rounded-lg border border-border bg-popover text-popover-foreground shadow-xl text-xs opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50">
+                                  <span className="font-bold text-primary block mb-0.5">Use in Context:</span>
+                                  <span className="text-muted-foreground block leading-relaxed italic">"{suggestion.context}"</span>
+                                </span>
                               </span>
-                            </span>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       )}
 
                       {/* Pronunciation Tips */}
                       {message.pronunciationTips && message.pronunciationTips.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5 shrink-0">
                             <VolumeX className="h-3 w-3" /> Pronunciation:
                           </span>
-                          {message.pronunciationTips.map((tip, idx) => (
-                            <span 
-                              key={idx} 
-                              className="relative group inline-block"
-                            >
-                              <Badge 
-                                variant="outline" 
-                                className="text-[10px] cursor-help bg-secondary/30 hover:bg-orange-500/10 border-orange-500/20 text-orange-500 dark:text-orange-400 font-medium"
+                          <div className="flex flex-wrap gap-1.5">
+                            {message.pronunciationTips.map((tip, idx) => (
+                              <span 
+                                key={idx} 
+                                className="relative group inline-block"
                               >
-                                {tip.word}
-                              </Badge>
-                              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2 rounded-lg border border-border bg-popover text-popover-foreground shadow-xl text-[10px] opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50">
-                                <span className="font-bold text-orange-500 block mb-0.5">Tip:</span>
-                                <span className="text-muted-foreground block leading-relaxed">{tip.tip}</span>
+                                <Badge 
+                                  variant="outline" 
+                                  className="text-[10px] cursor-help bg-secondary/40 hover:bg-orange-500/10 border-orange-500/20 text-orange-500 dark:text-orange-400 font-medium px-2 py-0.5 rounded-full transition-colors"
+                                >
+                                  {tip.word}
+                                </Badge>
+                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 rounded-lg border border-border bg-popover text-popover-foreground shadow-xl text-xs opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50">
+                                  <span className="font-bold text-orange-500 block mb-0.5">Tip:</span>
+                                  <span className="text-muted-foreground block leading-relaxed">{tip.tip}</span>
+                                </span>
                               </span>
-                            </span>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>

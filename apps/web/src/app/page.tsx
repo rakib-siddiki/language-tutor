@@ -37,11 +37,11 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans">
+    <div className="h-full bg-background flex flex-col font-sans">
       <div className="bg-mesh" aria-hidden="true" />
       <Header />
       
-      <main className="flex-1 flex flex-col py-6">
+      <main className="flex-1 flex flex-col min-h-0">
         {step === 'setup' && (
           <SessionSetupContainer onStartSession={handleStartSession} />
         )}

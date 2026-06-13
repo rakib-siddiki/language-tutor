@@ -1,13 +1,13 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { GoogleGenAI } from '@google/genai';
-import { MsEdgeTTS, OUTPUT_FORMAT } from 'msedge-tts';
-import { 
-  TutorRequest, 
-  TutorResponse, 
-  ScoreReport, 
-  ConversationTurn 
-} from '@language-tutor/shared-types';
+import { Injectable, BadRequestException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { GoogleGenAI } from "@google/genai";
+import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
+import {
+  TutorRequest,
+  TutorResponse,
+  ScoreReport,
+  ConversationTurn,
+} from "@language-tutor/shared-types";
 
 @Injectable()
 export class TutorService {
@@ -16,25 +16,23 @@ export class TutorService {
   /**
    * Orchestrates the chat turn:
    * 1. Prepares the Gemini prompt and system instructions.
-   * 2. Calls Gemini 2.0 Flash with audio and history to generate a structured JSON response.
+   * 2. Calls Gemini 3.5 Flash with audio and history to generate a structured JSON response.
    * 3. Synthesizes the generated tutor text into speech using Edge TTS.
    * 4. Returns the combined TutorResponse.
    */
   async processChat(
     request: TutorRequest & { voice?: string },
-    clientApiKey?: string
+    clientApiKey?: string,
   ): Promise<TutorResponse> {
     const { audioBase64, mimeType, history, mode, scenario, voice } = request;
 
-    // Resolve API key
-    const apiKey = clientApiKey || this.configService.get<string>('GEMINI_API_KEY');
-    if (!apiKey) {
+    if (!clientApiKey) {
       throw new BadRequestException(
-        'Gemini API key is required. Please provide it in the settings panel or set the GEMINI_API_KEY environment variable.'
+        "Gemini API key is required. Please provide it in the settings panel.",
       );
     }
 
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({ apiKey: clientApiKey });
 
     // Determine system instructions based on mode and scenario
     const systemInstruction = this.getSystemInstruction(mode, scenario);
@@ -46,7 +44,7 @@ export class TutorService {
     if (history && history.length > 0) {
       for (const turn of history) {
         contents.push({
-          role: turn.role === 'user' ? 'user' : 'model',
+          role: turn.role === "user" ? "user" : "model",
           parts: [{ text: turn.text }],
         });
       }
@@ -64,71 +62,71 @@ export class TutorService {
     }
 
     currentParts.push({
-      text: 'Listen to my audio response (if provided) or read my input. Transcribe it, correct it, offer vocabulary improvements, pronunciation tips, and respond as my tutor.',
+      text: "Listen to my audio response (if provided) or read my input. Transcribe it, correct it, offer vocabulary improvements, pronunciation tips, and respond as my tutor.",
     });
 
     contents.push({
-      role: 'user',
+      role: "user",
       parts: currentParts,
     });
 
     try {
-      // Call Gemini 2.0 Flash
+      // Call Gemini 3.5 Flash
       const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
+        model: "gemini-3.5-flash",
         contents,
         config: {
           systemInstruction,
-          responseMimeType: 'application/json',
+          responseMimeType: "application/json",
           responseSchema: {
-            type: 'OBJECT',
+            type: "OBJECT",
             properties: {
-              userTranscript: { type: 'STRING' },
-              correctedTranscript: { type: 'STRING' },
+              userTranscript: { type: "STRING" },
+              correctedTranscript: { type: "STRING" },
               corrections: {
-                type: 'ARRAY',
+                type: "ARRAY",
                 items: {
-                  type: 'OBJECT',
+                  type: "OBJECT",
                   properties: {
-                    original: { type: 'STRING' },
-                    corrected: { type: 'STRING' },
-                    explanation: { type: 'STRING' },
+                    original: { type: "STRING" },
+                    corrected: { type: "STRING" },
+                    explanation: { type: "STRING" },
                   },
-                  required: ['original', 'corrected', 'explanation'],
+                  required: ["original", "corrected", "explanation"],
                 },
               },
               vocabularySuggestions: {
-                type: 'ARRAY',
+                type: "ARRAY",
                 items: {
-                  type: 'OBJECT',
+                  type: "OBJECT",
                   properties: {
-                    original: { type: 'STRING' },
-                    suggestion: { type: 'STRING' },
-                    context: { type: 'STRING' },
+                    original: { type: "STRING" },
+                    suggestion: { type: "STRING" },
+                    context: { type: "STRING" },
                   },
-                  required: ['original', 'suggestion', 'context'],
+                  required: ["original", "suggestion", "context"],
                 },
               },
               pronunciationTips: {
-                type: 'ARRAY',
+                type: "ARRAY",
                 items: {
-                  type: 'OBJECT',
+                  type: "OBJECT",
                   properties: {
-                    word: { type: 'STRING' },
-                    tip: { type: 'STRING' },
+                    word: { type: "STRING" },
+                    tip: { type: "STRING" },
                   },
-                  required: ['word', 'tip'],
+                  required: ["word", "tip"],
                 },
               },
-              tutorText: { type: 'STRING' },
+              tutorText: { type: "STRING" },
             },
             required: [
-              'userTranscript',
-              'correctedTranscript',
-              'corrections',
-              'vocabularySuggestions',
-              'pronunciationTips',
-              'tutorText',
+              "userTranscript",
+              "correctedTranscript",
+              "corrections",
+              "vocabularySuggestions",
+              "pronunciationTips",
+              "tutorText",
             ],
           },
         },
@@ -136,7 +134,7 @@ export class TutorService {
 
       const responseText = response.text;
       if (!responseText) {
-        throw new Error('Empty response from Gemini.');
+        throw new Error("Empty response from Gemini.");
       }
 
       // Parse JSON response from Gemini
@@ -145,7 +143,7 @@ export class TutorService {
       // Synthesize tutorText to Speech
       const audioBufferBase64 = await this.synthesizeSpeech(
         geminiResult.tutorText,
-        voice
+        voice,
       );
 
       return {
@@ -158,9 +156,9 @@ export class TutorService {
         audioBase64: audioBufferBase64,
       };
     } catch (error) {
-      console.error('Error processing tutor chat turn:', error);
+      console.error("Error processing tutor chat turn:", error);
       throw new BadRequestException(
-        `Failed to process conversation turn: ${error.message || error}`
+        `Failed to process conversation turn: ${error.message || error}`,
       );
     }
   }
@@ -170,27 +168,29 @@ export class TutorService {
    */
   async evaluateSession(
     history: ConversationTurn[],
-    mode: 'ielts' | 'business' | 'casual',
+    mode: "ielts" | "business" | "casual",
     scenario?: string,
-    clientApiKey?: string
+    clientApiKey?: string,
   ): Promise<ScoreReport> {
-    // Resolve API key
-    const apiKey = clientApiKey || this.configService.get<string>('GEMINI_API_KEY');
-    if (!apiKey) {
+    // Resolve API key from frontend
+
+    if (!clientApiKey) {
       throw new BadRequestException(
-        'Gemini API key is required. Please provide it in the settings panel or set the GEMINI_API_KEY environment variable.'
+        "Gemini API key is required. Please provide it in the settings panel.",
       );
     }
 
     if (!history || history.length === 0) {
-      throw new BadRequestException('Cannot evaluate an empty session history.');
+      throw new BadRequestException(
+        "Cannot evaluate an empty session history.",
+      );
     }
 
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({ apiKey: clientApiKey });
 
     const evaluationPrompt = `
       You are an expert English language assessor. Evaluate the following speaking/conversation session history.
-      The session mode was: ${mode} ${scenario ? `(${scenario})` : ''}.
+      The session mode was: ${mode} ${scenario ? `(${scenario})` : ""}.
 
       Assess the user's performance across the following rubrics based on the session details:
       1. Fluency & Coherence
@@ -207,44 +207,44 @@ export class TutorService {
 
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
+        model: "gemini-3.5-flash",
         contents: evaluationPrompt,
         config: {
-          responseMimeType: 'application/json',
+          responseMimeType: "application/json",
           responseSchema: {
-            type: 'OBJECT',
+            type: "OBJECT",
             properties: {
-              fluencyScore: { type: 'NUMBER' },
-              vocabularyScore: { type: 'NUMBER' },
-              grammarScore: { type: 'NUMBER' },
-              pronunciationScore: { type: 'NUMBER' },
-              overallBand: { type: 'NUMBER' },
-              feedbackSummary: { type: 'STRING' },
+              fluencyScore: { type: "NUMBER" },
+              vocabularyScore: { type: "NUMBER" },
+              grammarScore: { type: "NUMBER" },
+              pronunciationScore: { type: "NUMBER" },
+              overallBand: { type: "NUMBER" },
+              feedbackSummary: { type: "STRING" },
               commonMistakes: {
-                type: 'ARRAY',
-                items: { type: 'STRING' },
+                type: "ARRAY",
+                items: { type: "STRING" },
               },
               exampleImprovements: {
-                type: 'ARRAY',
+                type: "ARRAY",
                 items: {
-                  type: 'OBJECT',
+                  type: "OBJECT",
                   properties: {
-                    original: { type: 'STRING' },
-                    improved: { type: 'STRING' },
+                    original: { type: "STRING" },
+                    improved: { type: "STRING" },
                   },
-                  required: ['original', 'improved'],
+                  required: ["original", "improved"],
                 },
               },
             },
             required: [
-              'fluencyScore',
-              'vocabularyScore',
-              'grammarScore',
-              'pronunciationScore',
-              'overallBand',
-              'feedbackSummary',
-              'commonMistakes',
-              'exampleImprovements',
+              "fluencyScore",
+              "vocabularyScore",
+              "grammarScore",
+              "pronunciationScore",
+              "overallBand",
+              "feedbackSummary",
+              "commonMistakes",
+              "exampleImprovements",
             ],
           },
         },
@@ -252,14 +252,14 @@ export class TutorService {
 
       const responseText = response.text;
       if (!responseText) {
-        throw new Error('Empty evaluation response from Gemini.');
+        throw new Error("Empty evaluation response from Gemini.");
       }
 
       return JSON.parse(responseText);
     } catch (error) {
-      console.error('Error evaluating session:', error);
+      console.error("Error evaluating session:", error);
       throw new BadRequestException(
-        `Failed to generate session evaluation: ${error.message || error}`
+        `Failed to generate session evaluation: ${error.message || error}`,
       );
     }
   }
@@ -267,14 +267,17 @@ export class TutorService {
   /**
    * Synthesizes text to base64-encoded MP3 audio using Edge TTS.
    */
-  private async synthesizeSpeech(text: string, voice?: string): Promise<string> {
+  private async synthesizeSpeech(
+    text: string,
+    voice?: string,
+  ): Promise<string> {
     const tts = new MsEdgeTTS();
-    const selectedVoice = voice || 'en-US-AriaNeural';
+    const selectedVoice = voice || "en-US-AriaNeural";
 
     try {
       await tts.setMetadata(
         selectedVoice,
-        OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3
+        OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3,
       );
 
       return new Promise<string>((resolve, reject) => {
@@ -282,16 +285,16 @@ export class TutorService {
           const { audioStream } = tts.toStream(text);
           const chunks: Buffer[] = [];
 
-          audioStream.on('data', (chunk: Buffer) => {
+          audioStream.on("data", (chunk: Buffer) => {
             chunks.push(chunk);
           });
 
-          audioStream.on('end', () => {
+          audioStream.on("end", () => {
             const buffer = Buffer.concat(chunks);
-            resolve(buffer.toString('base64'));
+            resolve(buffer.toString("base64"));
           });
 
-          audioStream.on('error', (err) => {
+          audioStream.on("error", (err) => {
             reject(err);
           });
         } catch (err) {
@@ -299,9 +302,9 @@ export class TutorService {
         }
       });
     } catch (err) {
-      console.error('Edge TTS synthesis failed:', err);
+      console.error("Edge TTS synthesis failed:", err);
       // Return empty base64 on TTS failure so conversation does not hard crash
-      return '';
+      return "";
     }
   }
 
@@ -309,8 +312,8 @@ export class TutorService {
    * Returns system instructions for the Gemini tutor model.
    */
   private getSystemInstruction(
-    mode: 'ielts' | 'business' | 'casual',
-    scenario?: string
+    mode: "ielts" | "business" | "casual",
+    scenario?: string,
   ): string {
     const commonInstructions = `
       Always respond in valid JSON matching the schema provided. Do not include markdown formatting like \`\`\`json.
@@ -321,8 +324,8 @@ export class TutorService {
       Always respond as the tutor in tutorText.
     `;
 
-    if (mode === 'ielts') {
-      const activeScenario = scenario || 'ielts-part-1';
+    if (mode === "ielts") {
+      const activeScenario = scenario || "ielts-part-1";
       return `
         You are an official, professional IELTS Speaking Examiner. Your behavior must strictly mirror the actual IELTS exam environment.
         Current Part: ${activeScenario}.
@@ -336,8 +339,8 @@ export class TutorService {
       `;
     }
 
-    if (mode === 'business') {
-      const activeScenario = scenario || 'job-interview';
+    if (mode === "business") {
+      const activeScenario = scenario || "job-interview";
       return `
         You are a professional Business English partner and examiner.
         Current Scenario: ${activeScenario}.
@@ -354,7 +357,7 @@ export class TutorService {
     // Default to Casual
     return `
       You are a friendly, encouraging English conversation partner.
-      Current topic/focus: ${scenario || 'General topics'}.
+      Current topic/focus: ${scenario || "General topics"}.
       Speak naturally, warmly, and keep the dialogue flowing like a friendly chat.
       Ask open-ended, interesting questions in 'tutorText' to keep the user speaking. Keep turns short (1-2 sentences).
       Provide gentle corrections and vocabulary tips in the JSON fields.

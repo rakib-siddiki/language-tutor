@@ -293,7 +293,7 @@ export default function TutorSessionContainer({
   };
 
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-4 flex-1 flex flex-col min-h-0 animate-fade-in">
+    <div className="container max-w-6xl mx-auto px-4 pb-6 pt-2 flex-1 flex flex-col min-h-0 animate-fade-in h-full">
       {/* Session Topbar */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between pb-4 border-b border-border/40 mb-4 shrink-0">
         <div className="flex items-center gap-3">
@@ -373,7 +373,7 @@ export default function TutorSessionContainer({
       )}
 
       {/* Main Session Viewport */}
-      <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0 relative">
+      <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0 relative overflow-hidden h-full">
         {/* Left Side: Chat Log Container */}
         <div className="flex-1 flex flex-col min-h-0 h-full">
           <ConversationPaneContainer 
@@ -384,7 +384,7 @@ export default function TutorSessionContainer({
         </div>
 
         {/* Right Side: Media Capture & Playback controls */}
-        <div className="w-full md:w-80 flex flex-col gap-6 shrink-0">
+        <div className="w-full md:w-80 flex flex-col gap-4 shrink-0 min-h-0">
           {/* Active Audio Speech Panel */}
           {state.status === 'playing' && (
             <Card className="border-primary/20 bg-primary/5 shadow-md animate-slide-up">
