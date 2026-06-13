@@ -50,7 +50,7 @@ export default function EvaluationDashboardContainer({
       setLoading(true);
       setError(null);
       
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
 
       try {
         const response = await fetch(`${apiBase}/api/tutor/evaluate`, {

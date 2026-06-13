@@ -207,7 +207,7 @@ export default function TutorSessionContainer({
     cleanupAudio();
     dispatch({ type: 'STOP_RECORDING' });
 
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
 
     try {
       // Map current messages to pure history structure
