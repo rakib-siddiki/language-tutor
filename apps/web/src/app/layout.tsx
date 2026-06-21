@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   title: 'Language Tutor — AI-Powered Speaking Partner',
   description:
     'Zero-cost, real-time conversational language tutor for IELTS Speaking prep, Business English, and Casual practice. Powered by Gemini AI.',
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export const viewport = {
