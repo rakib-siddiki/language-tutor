@@ -51,8 +51,9 @@ describe('ConversationPaneContainer', () => {
     render(<ConversationPaneContainer messages={mockMessages} showCorrections={true} />);
 
     // Strikethrough correction text exists
-    const correction = screen.getByText('goes');
-    expect(correction).toHaveClass('line-through');
+    const corrections = screen.getAllByText('goes');
+    expect(corrections.length).toBeGreaterThan(0);
+    expect(corrections[0]).toHaveClass('line-through');
 
     // Vocabulary chips exists
     expect(screen.getByText('school → university')).toBeInTheDocument();

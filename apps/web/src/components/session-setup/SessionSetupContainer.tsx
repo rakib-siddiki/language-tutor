@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   Button,
   Input,
@@ -32,6 +32,7 @@ import {
   Award,
 } from "lucide-react";
 import { ConversationMode } from "@language-tutor/shared-types";
+import { useSessionSetupContainer } from "@/hooks";
 
 interface SessionSetupContainerProps {
   onStartSession: (config: {
@@ -134,68 +135,26 @@ const MODE_ACCENT_STYLES: Record<
 export default function SessionSetupContainer({
   onStartSession,
 }: SessionSetupContainerProps) {
-  const [mode, setMode] = useState<ConversationMode | null>(null);
-  const [scenario, setScenario] = useState<string>("");
-  const [apiKey, setApiKey] = useState("");
-  const [voice, setVoice] = useState("en-US-AriaNeural");
-
-  const [showKey, setShowKey] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
-  const [isStarting, setIsStarting] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-    if (typeof window !== "undefined") {
-      const savedKey = localStorage.getItem("language-tutor-api-key") || "";
-      const savedVoice =
-        localStorage.getItem("language-tutor-voice") || "en-US-AriaNeural";
-      setApiKey(savedKey);
-      setVoice(savedVoice);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (mode === "ielts") {
-      setScenario("ielts-part-1");
-    } else if (mode === "business") {
-      setScenario("job-interview");
-    } else if (mode === "casual") {
-      setScenario("general-chitchat");
-    } else {
-      setScenario("");
-    }
-  }, [mode]);
-
-  const handleStart = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg(null);
-
-    if (!mode) {
-      setErrorMsg("Please select a learning mode to continue.");
-      return;
-    }
-
-    if (!apiKey.trim()) {
-      setErrorMsg("A Gemini API key is required to start your session.");
-      return;
-    }
-
-    if (typeof window !== "undefined") {
-      localStorage.setItem("language-tutor-api-key", apiKey.trim());
-      localStorage.setItem("language-tutor-voice", voice);
-    }
-
-    setIsStarting(true);
-    setTimeout(() => {
-      onStartSession({ mode, scenario, apiKey: apiKey.trim(), voice });
-      setIsStarting(false);
-    }, 400);
-  };
+  const {
+    mode,
+    setMode,
+    scenario,
+    setScenario,
+    apiKey,
+    setApiKey,
+    voice,
+    setVoice,
+    showKey,
+    setShowKey,
+    errorMsg,
+    isMounted,
+    isStarting,
+    isFormValid,
+    handleStart,
+  } = useSessionSetupContainer({ onStartSession });
 
   if (!isMounted) return null;
 
-  const isFormValid = mode !== null && apiKey.trim() !== "";
   const selectedVoice = VOICES.find((v) => v.value === voice);
 
   return (

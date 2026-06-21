@@ -1,3 +1,3 @@
 export { default as TutorSessionContainer } from './TutorSessionContainer';
-export * from './useSessionReducer';
+export { useSessionReducer } from '@/hooks';
 export * from './TutorSessionContainer';

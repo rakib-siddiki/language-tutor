@@ -1,28 +1,9 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Badge } from '@/components/ui';
-import { Sparkles, User, AlertTriangle, BookOpen, VolumeX } from 'lucide-react';
-
-export interface Message {
-  id: string;
-  role: 'user' | 'tutor';
-  text: string;
-  corrections?: Array<{
-    original: string;
-    corrected: string;
-    explanation: string;
-  }>;
-  vocabularySuggestions?: Array<{
-    original: string;
-    suggestion: string;
-    context: string;
-  }>;
-  pronunciationTips?: Array<{
-    word: string;
-    tip: string;
-  }>;
-}
+import { Sparkles, User, AlertTriangle, BookOpen, Volume2 } from 'lucide-react';
+import { useConversationPaneContainer, Message } from '@/hooks';
 
 interface ConversationPaneContainerProps {
   messages: Message[];
@@ -35,88 +16,16 @@ export default function ConversationPaneContainer({
   isProcessing = false,
   showCorrections = true,
 }: ConversationPaneContainerProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  // Auto-scroll to bottom
-  useEffect(() => {
-    const container = containerRef.current;
-    if (container) {
-      if (typeof container.scrollTo === 'function') {
-        container.scrollTo({
-          top: container.scrollHeight,
-          behavior: 'smooth',
-        });
-      } else {
-        container.scrollTop = container.scrollHeight;
-      }
-    }
-  }, [messages, isProcessing]);
-
-  // Robust inline highlighting function
-  const renderHighlightedText = (text: string, corrections?: any[]) => {
-    if (!showCorrections || !corrections || corrections.length === 0) {
-      return <span className="font-sans text-sm md:text-base leading-relaxed">{text}</span>;
-    }
-
-    const sortedCorrections = [...corrections].sort((a, b) => b.original.length - a.original.length);
-    interface Match {
-      start: number;
-      end: number;
-      original: string;
-      corrected: string;
-      explanation: string;
-    }
-    const matches: Match[] = [];
-
-    for (const corr of sortedCorrections) {
-      if (!corr.original) continue;
-      let pos = text.indexOf(corr.original);
-      while (pos !== -1) {
-        const isOverlapping = matches.some(m => 
-          (pos >= m.start && pos < m.end) || 
-          (pos + corr.original.length > m.start && pos + corr.original.length <= m.end)
-        );
-
-        if (!isOverlapping) {
-          matches.push({
-            start: pos,
-            end: pos + corr.original.length,
-            original: corr.original,
-            corrected: corr.corrected,
-            explanation: corr.explanation,
-          });
-        }
-        pos = text.indexOf(corr.original, pos + 1);
-      }
-    }
-
-    matches.sort((a, b) => a.start - b.start);
-
-    const elements: React.ReactNode[] = [];
-    let lastIndex = 0;
-
-    matches.forEach((match, idx) => {
-      if (match.start > lastIndex) {
-        elements.push(<span key={`text-${lastIndex}`} className="font-sans text-sm md:text-base leading-relaxed">{text.substring(lastIndex, match.start)}</span>);
-      }
-
-      elements.push(
-        <span key={`match-${idx}`} className="inline-block mx-0.5">
-          <span className="line-through text-destructive font-semibold decoration-wavy decoration-destructive/60 decoration-2">
-            {match.original}
-          </span>
-        </span>
-      );
-
-      lastIndex = match.end;
-    });
-
-    if (lastIndex < text.length) {
-      elements.push(<span key={`text-${lastIndex}`} className="font-sans text-sm md:text-base leading-relaxed">{text.substring(lastIndex)}</span>);
-    }
-
-    return <>{elements}</>;
-  };
+  const {
+    containerRef,
+    speakingWord,
+    speakWord,
+    renderHighlightedText,
+  } = useConversationPaneContainer({
+    messages,
+    isProcessing,
+    showCorrections,
+  });
 
   return (
     <div className="flex-1 flex flex-col min-h-0 border border-border/30 bg-card/20 backdrop-blur-sm rounded-xl overflow-hidden w-full h-full">
@@ -238,26 +147,37 @@ export default function ConversationPaneContainer({
                       {message.pronunciationTips && message.pronunciationTips.length > 0 && (
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5 shrink-0">
-                            <VolumeX className="h-3 w-3" /> Pronunciation:
+                            <Volume2 className="h-3 w-3" /> Pronunciation:
                           </span>
                           <div className="flex flex-wrap gap-1.5">
-                            {message.pronunciationTips.map((tip, idx) => (
-                              <span 
-                                key={idx} 
-                                className="relative group inline-block"
-                              >
-                                <Badge 
-                                  variant="outline" 
-                                  className="text-[10px] cursor-help bg-secondary/40 hover:bg-orange-500/10 border-orange-500/20 text-orange-500 dark:text-orange-400 font-medium px-2 py-0.5 rounded-full transition-colors"
+                            {message.pronunciationTips.map((tip, idx) => {
+                              const isSpeaking = speakingWord === tip.word;
+                              return (
+                                <span 
+                                  key={idx} 
+                                  className="relative group inline-block"
                                 >
-                                  {tip.word}
-                                </Badge>
-                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 rounded-lg border border-border bg-popover text-popover-foreground shadow-xl text-xs opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50">
-                                  <span className="font-bold text-orange-500 block mb-0.5">Tip:</span>
-                                  <span className="text-muted-foreground block leading-relaxed">{tip.tip}</span>
+                                  <Badge 
+                                    variant="outline" 
+                                    className={`text-[10px] cursor-pointer font-medium px-2 py-0.5 rounded-full transition-all flex items-center gap-1 active:scale-95 ${
+                                      isSpeaking 
+                                        ? 'bg-orange-500/20 border-orange-500 text-orange-600 dark:text-orange-300 animate-pulse'
+                                        : 'bg-secondary/40 hover:bg-orange-500/10 border-orange-500/20 text-orange-500 dark:text-orange-400'
+                                    }`}
+                                    onClick={() => speakWord(tip.word)}
+                                    title="Click to hear pronunciation"
+                                  >
+                                    <Volume2 className={`h-2.5 w-2.5 shrink-0 ${isSpeaking ? 'animate-bounce' : ''}`} />
+                                    {tip.word}
+                                  </Badge>
+                                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 rounded-lg border border-border bg-popover text-popover-foreground shadow-xl text-xs opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50">
+                                    <span className="font-bold text-orange-500 block mb-0.5">Tip:</span>
+                                    <span className="text-muted-foreground block leading-relaxed">{tip.tip}</span>
+                                    <span className="text-[10px] text-primary/70 block mt-1 font-semibold">💡 Click word to hear pronunciation</span>
+                                  </span>
                                 </span>
-                              </span>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       )}

@@ -1,5 +1,4 @@
-import { sessionReducer, initialState, SessionState } from './useSessionReducer';
-import { Message } from '../conversation-pane/ConversationPaneContainer';
+import { sessionReducer, initialState, SessionState, Message } from '@/hooks';
 
 describe('sessionReducer', () => {
   it('handles START_RECORDING action', () => {

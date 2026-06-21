@@ -1,2 +1,2 @@
 export { default as AudioRecorderContainer } from './AudioRecorderContainer';
-export * from './useAudioRecorder';
+export { useAudioRecorder } from '@/hooks';

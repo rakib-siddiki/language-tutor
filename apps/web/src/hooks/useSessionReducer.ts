@@ -1,7 +1,7 @@
 'use client';
 
 import { useReducer } from 'react';
-import { Message } from '../conversation-pane/ConversationPaneContainer';
+import { Message } from './useConversationPaneContainer';
 
 export type SessionStatus = 'idle' | 'recording' | 'processing' | 'playing' | 'error';
 
