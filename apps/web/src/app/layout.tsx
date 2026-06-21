@@ -22,6 +22,7 @@ export const metadata: Metadata = {
     'Zero-cost, real-time conversational language tutor for IELTS Speaking prep, Business English, and Casual practice. Powered by Gemini AI.',
   icons: {
     icon: '/favicon.png',
+    apple: '/apple-icon.png',
   },
 };
 
