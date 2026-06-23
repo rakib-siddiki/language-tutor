@@ -11,6 +11,7 @@ interface UseSessionSetupContainerProps {
     voice: string;
   }) => void;
 }
+const initialApiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
 
 export function useSessionSetupContainer({
   onStartSession,
@@ -28,7 +29,7 @@ export function useSessionSetupContainer({
   useEffect(() => {
     setIsMounted(true);
     if (typeof window !== 'undefined') {
-      const savedKey = localStorage.getItem('language-tutor-api-key') || '';
+      const savedKey = localStorage.getItem('language-tutor-api-key') || initialApiKey;
       const savedVoice =
         localStorage.getItem('language-tutor-voice') || 'en-US-AriaNeural';
       setApiKey(savedKey);
