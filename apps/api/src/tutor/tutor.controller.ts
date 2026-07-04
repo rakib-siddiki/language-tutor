@@ -1,5 +1,6 @@
-import { Controller, Post, Body, Headers } from '@nestjs/common';
+import { Controller, Post, Body, Headers, UseGuards } from '@nestjs/common';
 import { TutorService } from './tutor.service';
+import { RateLimitGuard } from './guards/rate-limit.guard';
 import { 
   TutorRequest, 
   TutorResponse, 
@@ -9,6 +10,7 @@ import {
 } from '@language-tutor/shared-types';
 
 @Controller('tutor')
+@UseGuards(RateLimitGuard)
 export class TutorController {
   constructor(private readonly tutorService: TutorService) {}
 
