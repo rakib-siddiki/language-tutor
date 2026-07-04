@@ -5,7 +5,7 @@ Set up the NestJS backend application (`apps/api`) end-to-end for the single cri
 **API Flow for `POST /api/tutor/chat`:**
 1. Receive a `TutorRequest` body (audio base64, mimeType, history, mode, scenario).
 2. Build a structured Gemini prompt from the mode/scenario and conversation history.
-3. Call `gemini-2.0-flash` with the audio as `inlineData` and a strict `responseSchema` enforcing the `TutorResponse` JSON shape.
+3. Call `gemini-3.1-flash-lite` with the audio as `inlineData` and a strict `responseSchema` enforcing the `TutorResponse` JSON shape.
 4. Parse Gemini's structured JSON response.
 5. Call `msedge-tts` server-side to synthesize the `tutorText` into an MP3 buffer, selecting the voice by mode (IELTS → `en-GB-SoniaNeural`, Business/Casual → `en-US-JennyNeural`).
 6. Base64-encode the MP3 buffer and attach it to the response as `audioBase64`.

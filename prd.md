@@ -83,7 +83,7 @@ A zero-cost, browser-native conversational language tutor that simulates a human
 
 ### Backend (`apps/api`)
 - Framework: **NestJS** with TypeScript.
-- LLM Integration: **`@google/genai` SDK** calling `gemini-2.0-flash`. Audio passed as `inlineData` (base64 + mimeType). Structured JSON enforced via `responseSchema`.
+- LLM Integration: **`@google/genai` SDK** calling `gemini-3.1-flash-lite`. Audio passed as `inlineData` (base64 + mimeType). Structured JSON enforced via `responseSchema`.
 - TTS Integration: **`msedge-tts`** (server-side). MP3 buffer base64-encoded and returned in the response JSON.
 - API Pattern: **Stateless HTTP POST** per conversational turn. Full conversation history sent by the client on each request.
 - CORS: Configured for `localhost:3000` (development) and the production origin.
@@ -174,6 +174,6 @@ interface ScoreReport {
 ## Further Notes
 
 - `MediaRecorder` MIME type varies by browser. The frontend detects the supported type at runtime via `MediaRecorder.isTypeSupported` and includes it in `TutorRequest.mimeType`.
-- Gemini free tier: ~15 RPM on `gemini-2.0-flash`. Sessions should throttle and display a "Processing…" state.
+- Gemini free tier: ~15 RPM on `gemini-3.1-flash-lite`. Sessions should throttle and display a "Processing…" state.
 - `msedge-tts` uses Microsoft's unofficial Edge Read-Aloud WebSocket endpoint. A fallback to browser-native `SpeechSynthesis` should be considered for resilience.
 - The NX monorepo uses **pnpm** for optimal workspace hoisting.

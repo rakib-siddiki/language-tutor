@@ -16,7 +16,7 @@ export class TutorService {
   /**
    * Orchestrates the chat turn:
    * 1. Prepares the Gemini prompt and system instructions.
-   * 2. Calls Gemini 3.5 Flash with audio and history to generate a structured JSON response.
+   * 2. Calls Gemini 3.1 Flash Lite with audio and history to generate a structured JSON response.
    * 3. Synthesizes the generated tutor text into speech using Edge TTS.
    * 4. Returns the combined TutorResponse.
    */
@@ -71,9 +71,9 @@ export class TutorService {
     });
 
     try {
-      // Call Gemini 3.5 Flash
+      // Call Gemini 3.1 Flash Lite
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-3.1-flash-lite",
         contents,
         config: {
           systemInstruction,
@@ -207,7 +207,7 @@ export class TutorService {
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-3.1-flash-lite",
         contents: evaluationPrompt,
         config: {
           responseMimeType: "application/json",

@@ -37,7 +37,7 @@ sequenceDiagram
   - **Business English**: Roleplays real-world scenarios (job interviews, client presentations, team meetings) with industry-specific vocabulary feedback.
   - **Casual Conversation**: Friendly, open-ended dialogues to build fluency and general speaking confidence.
 - 🧠 **Structured AI Grading & Feedback**
-  - Instant transcription via `gemini-3.5-flash`.
+  - Instant transcription via `gemini-3.1-flash-lite`.
   - Non-blocking inline corrections highlighting errors (original vs corrected) with detailed grammar explanations.
   - Lexical upgrade recommendations to expand vocabulary (e.g., suggesting "densely populated" over "crowded").
   - Pronunciation guidance for difficult or mispronounced words.
@@ -233,8 +233,8 @@ Terminates the session and performs an assessment of the student's fluency, voca
 
 ## ⚙️ Core Technical Details
 
-### ⚡ Gemini 3.5 Flash Integration
-The backend utilizes the official `@google/genai` SDK to communicate with the `gemini-3.5-flash` model. High accuracy and format conformance are achieved via:
+### ⚡ Gemini 3.1 Flash Lite Integration
+The backend utilizes the official `@google/genai` SDK to communicate with the `gemini-3.1-flash-lite` model. High accuracy and format conformance are achieved via:
 1. **System Persona Prompting**: System instructions dynamically adjust depending on the user's selected mode (IELTS Examiner, Business Partner, or Casual Chat Companion).
 2. **Strict Schema Constraints**: Enforcing JSON responses through `responseSchema` configurations prevents runtime parsing errors on JSON serialization.
 
