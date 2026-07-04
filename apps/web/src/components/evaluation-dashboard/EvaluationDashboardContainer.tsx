@@ -162,7 +162,7 @@ export default function EvaluationDashboardContainer({
       {/* Title & Actions Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border/40 pb-6 shrink-0 no-print">
         <div>
-          <h1 className="text-3xl font-black font-outfit bg-gradient-to-r from-primary to-indigo-500 bg-clip-text text-transparent flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-black font-outfit bg-gradient-to-r from-primary to-indigo-500 bg-clip-text text-transparent flex items-center gap-2">
             <Trophy className="h-7 w-7 text-primary" />
             Speaking Performance Report
           </h1>

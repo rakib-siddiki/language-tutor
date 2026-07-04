@@ -151,11 +151,22 @@ export function useConversationPaneContainer({
       elements.push(
         React.createElement(
           'span',
-          { key: `match-${idx}`, className: 'inline-block mx-0.5' },
+          { key: `match-${idx}`, className: 'inline-flex items-center gap-1.5 mx-0.5 relative group cursor-pointer' },
           React.createElement(
             'span',
-            { className: 'line-through text-destructive font-semibold decoration-wavy decoration-destructive/60 decoration-2' },
+            { className: 'line-through bg-destructive/20 text-destructive font-semibold px-1 rounded-sm text-sm' },
             match.original
+          ),
+          React.createElement(
+            'span',
+            { className: 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold px-1 rounded-sm text-sm' },
+            match.corrected
+          ),
+          React.createElement(
+            'span',
+            { className: 'absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-lg border border-border bg-popover text-popover-foreground shadow-2xl text-xs opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50 text-left' },
+            React.createElement('span', { className: 'font-bold text-foreground block mb-1' }, 'Grammar'),
+            React.createElement('span', { className: 'text-muted-foreground block leading-relaxed' }, match.explanation)
           )
         )
       );

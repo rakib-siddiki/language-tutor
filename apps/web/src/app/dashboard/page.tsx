@@ -33,9 +33,9 @@ export default function DashboardPage() {
   return (
     <div className="h-full bg-background flex flex-col font-sans">
       <div className="bg-mesh" aria-hidden="true" />
-      <Header />
+      {step !== 'session' && <Header />}
 
-      <main className="flex-1 flex flex-col min-h-0">
+      <main className={`flex-1 flex flex-col min-h-0 ${step !== 'session' ? 'overflow-y-auto' : 'overflow-hidden'}`}>
         {step === 'setup' && (
           <SessionSetupContainer onStartSession={handleStartSession} />
         )}

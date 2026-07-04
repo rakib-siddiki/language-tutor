@@ -81,11 +81,11 @@ export function useAudioRecorderContainer({
 
         if (barHeight < 3) barHeight = 3; // Minimum height for style
 
-        // Create elegant gradient (Purple to Indigo)
-        const gradient = ctx.createLinearGradient(0, rect.height / 2 - barHeight / 2, 0, rect.height / 2 + barHeight / 2);
-        gradient.addColorStop(0, '#a78bfa'); // Light purple
-        gradient.addColorStop(0.5, '#8b5cf6'); // Mid purple
-        gradient.addColorStop(1, '#6366f1'); // Indigo
+        // Create elegant horizontal gradient (Blue to Purple to Pink)
+        const gradient = ctx.createLinearGradient(0, 0, rect.width, 0);
+        gradient.addColorStop(0, '#3b82f6'); // Blue
+        gradient.addColorStop(0.5, '#8b5cf6'); // Purple
+        gradient.addColorStop(1, '#ec4899'); // Pink
 
         ctx.fillStyle = gradient;
 
@@ -131,7 +131,7 @@ export function useAudioRecorderContainer({
   }, [toggleRecording, disabled, isProcessing]);
 
   // Determine button state color/animation classes
-  let buttonClasses = 'h-16 w-16 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg relative ';
+  let buttonClasses = 'size-16 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg relative ';
   if (isProcessing) {
     buttonClasses += 'bg-muted text-muted-foreground cursor-not-allowed';
   } else if (isRecording) {

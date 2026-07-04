@@ -14,7 +14,7 @@ sequenceDiagram
     actor User
     participant FE as Next.js Frontend
     participant BE as NestJS Backend
-    participant Gemini as Gemini 3.5 Flash
+    participant Gemini as Gemini 3.1 Flash light
     participant TTS as Edge TTS
 
     User->>FE: Record voice input (Spacebar / Mic Button)

@@ -463,7 +463,7 @@ export default function SessionSetupContainer({
           <div className="glass rounded-2xl border border-border/50 p-6 space-y-6">
             {/* API Key */}
             <div className="space-y-3">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <Label
                   htmlFor="api-key"
                   className="text-sm font-semibold flex items-center gap-2"
@@ -533,7 +533,7 @@ export default function SessionSetupContainer({
                   className="w-full bg-background/60 border-border/60 h-11 rounded-xl"
                 >
                   {selectedVoice ? (
-                    <span className="flex items-center gap-2">
+                    <span className="flex flex-wrap items-center gap-1.5">
                       <span>{selectedVoice.flag}</span>
                       <span className="font-medium">{selectedVoice.label}</span>
                       <span className="text-muted-foreground text-xs">

@@ -4,6 +4,7 @@ import React from 'react';
 import { useTutorSessionContainer } from '@/hooks';
 import { AudioRecorderContainer } from '../audio-recorder';
 import { ConversationPaneContainer } from '../conversation-pane';
+import Header from '../header';
 import { 
   Card, 
   CardContent, 
@@ -29,7 +30,9 @@ import {
   ArrowLeft, 
   LogOut, 
   CheckCircle2,
-  HelpCircle
+  HelpCircle,
+  SkipForward,
+  MoreHorizontal
 } from 'lucide-react';
 import { ConversationMode, ConversationTurn } from '@language-tutor/shared-types';
 
@@ -65,20 +68,28 @@ export default function TutorSessionContainer({
   });
 
   return (
-    <div className="container max-w-6xl mx-auto px-4 pb-6 pt-2 flex-1 flex flex-col min-h-0 animate-fade-in h-full">
-      {/* Session Topbar */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between pb-4 border-b border-border/40 mb-4 shrink-0">
-        <div className="flex items-center gap-3">
+    <>
+      <Header 
+        showFeedbackToggle={true}
+        feedbackChecked={state.showCorrections}
+        onFeedbackChange={() => dispatch({ type: 'TOGGLE_CORRECTIONS' })}
+        showEndButton={true}
+        onEndSession={handleEnd}
+        endButtonDisabled={state.messages.length === 0}
+      />
+
+      <div className="container max-w-6xl mx-auto px-4 pb-6 pt-4 flex-1 flex flex-col min-h-0 animate-fade-in h-full">
+        {/* Simplified Practice sub-header */}
+        <div className="flex items-center justify-between pb-3 border-b border-border/45 mb-4 shrink-0">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={onBackToSetup}
-            className="text-muted-foreground hover:text-foreground p-1 h-auto"
+            className="text-muted-foreground hover:text-foreground p-1 h-auto cursor-pointer"
           >
-            <ArrowLeft className="h-4 w-4 mr-1" />
+            <ArrowLeft className="size-4 mr-1" />
             Exit Setup
           </Button>
-          <Separator orientation="vertical" className="h-4" />
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="font-outfit capitalize text-primary border-primary/20 bg-primary/5">
               {config.mode}
@@ -88,33 +99,6 @@ export default function TutorSessionContainer({
             </span>
           </div>
         </div>
-
-        <div className="flex items-center gap-4">
-          {/* Corrections Toggle Switch */}
-          <div className="flex items-center space-x-2 bg-secondary/30 px-3 py-1.5 rounded-lg border border-border/30">
-            <Switch 
-              id="show-corrections" 
-              checked={state.showCorrections}
-              onCheckedChange={() => dispatch({ type: 'TOGGLE_CORRECTIONS' })}
-            />
-            <Label htmlFor="show-corrections" className="text-xs font-semibold cursor-pointer">
-              Show Grammar Feedback
-            </Label>
-          </div>
-
-          <Button 
-            variant="destructive"
-            size="sm"
-            onClick={handleEnd}
-            disabled={state.messages.length === 0}
-            className="font-outfit gap-1.5 shadow-md shadow-destructive/5"
-            title="Complete speaking practice and view full evaluation dashboard"
-          >
-            <LogOut className="h-4 w-4" />
-            End & Evaluate
-          </Button>
-        </div>
-      </div>
 
       {/* Rate Limit Alert */}
       {countdown !== null && (
@@ -147,7 +131,7 @@ export default function TutorSessionContainer({
       {/* Main Session Viewport */}
       <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0 relative overflow-hidden h-full">
         {/* Left Side: Chat Log Container */}
-        <div className="flex-1 flex flex-col min-h-0 h-full">
+        <div className="flex-1 flex flex-col min-h-0 md:h-full">
           <ConversationPaneContainer 
             messages={state.messages} 
             isProcessing={state.status === 'processing'}
@@ -156,66 +140,83 @@ export default function TutorSessionContainer({
         </div>
 
         {/* Right Side: Media Capture & Playback controls */}
-        <div className="w-full md:w-80 flex flex-col gap-4 shrink-0 min-h-0">
-          {/* Active Audio Speech Panel */}
-          {state.status === 'playing' && (
-            <Card className="border-primary/20 bg-primary/5 shadow-md animate-slide-up">
-              <CardContent className="p-4 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
-                    {state.audioPaused ? <VolumeX className="h-5 w-5 animate-pulse" /> : <Volume2 className="h-5 w-5 animate-bounce" />}
-                  </div>
-                  <div>
-                    <h4 className="font-outfit font-bold text-sm flex items-center gap-1.5">
-                      {state.audioPaused ? 'Tutor Paused' : 'Tutor Speaking...'}
-                      {usingBrowserVoice && (
-                        <Badge variant="outline" className="text-[9px] py-0 px-1.5 border-orange-500/35 bg-orange-500/5 text-orange-500 font-sans">
-                          Browser Voice
-                        </Badge>
-                      )}
-                    </h4>
-                    <p className="text-[10px] text-muted-foreground font-sans">
-                      {usingBrowserVoice ? 'Using browser SpeechSynthesis fallback.' : "Listen to the examiner's response."}
-                    </p>
-                  </div>
-                </div>
+        <div className="w-full md:w-80 flex flex-col gap-6 shrink-0 min-h-0">
+          {/* Status Card matching mockup */}
+          <Card className="border-border bg-card/45 backdrop-blur-sm shadow-xl">
+            <CardHeader className="pb-2 flex flex-row items-center justify-between shrink-0 py-3 px-4">
+              <CardTitle className="text-xs font-bold text-muted-foreground/80 font-outfit uppercase tracking-wider">
+                Status
+              </CardTitle>
+              <MoreHorizontal className="size-4 text-muted-foreground/60 cursor-pointer hover:text-foreground transition-colors" />
+            </CardHeader>
+            <CardContent className="p-4 flex flex-col gap-5 items-center justify-center text-center">
+              <div>
+                <h3 className="font-outfit text-lg font-black text-foreground">
+                  {state.status === 'playing' 
+                    ? (state.audioPaused ? 'Tutor Paused' : 'Tutor Speaking...') 
+                    : state.status === 'processing' 
+                      ? 'Tutor Processing...'
+                      : state.status === 'recording' 
+                        ? 'Student Speaking...' 
+                        : 'Examiner Ready'}
+                </h3>
+                {usingBrowserVoice && state.status === 'playing' && (
+                  <Badge variant="outline" className="text-[9px] py-0 px-1.5 mt-1 border-orange-500/35 bg-orange-500/5 text-orange-500 font-sans mx-auto">
+                    Browser Voice
+                  </Badge>
+                )}
+              </div>
 
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleAudioPlayPause}
-                    className="flex-1 font-outfit text-xs gap-1.5 h-9"
-                  >
-                    {state.audioPaused ? <Play className="h-3.5 w-3.5 fill-current" /> : <Pause className="h-3.5 w-3.5 fill-current" />}
-                    {state.audioPaused ? 'Resume' : 'Pause'}
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleAudioSkip}
-                    className="flex-1 font-outfit text-xs gap-1.5 h-9 hover:bg-primary/10 hover:text-primary"
-                  >
-                    <ChevronRight className="h-3.5 w-3.5" />
-                    Skip Speech
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+              {/* Media Circular Controls row */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleAudioPlayPause}
+                  disabled={state.status !== 'playing' || !state.audioPaused}
+                  title="Play"
+                  className="size-10 rounded-full bg-[#20222a] hover:bg-[#2e313c] text-white flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 shadow-md border-none"
+                >
+                  <Play className="size-4 fill-current ml-0.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAudioPlayPause}
+                  disabled={state.status !== 'playing' || state.audioPaused}
+                  title="Pause"
+                  className="size-10 rounded-full bg-[#20222a] hover:bg-[#2e313c] text-white flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 shadow-md border-none"
+                >
+                  <Pause className="size-4 fill-current" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAudioSkip}
+                  disabled={state.status !== 'playing'}
+                  title="Skip Speech"
+                  className="size-10 rounded-full bg-[#20222a] hover:bg-[#2e313c] text-white flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 shadow-md border-none"
+                >
+                  <SkipForward className="size-4 fill-current" />
+                </button>
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* Audio Recorder Shell */}
-          <Card className="border-border bg-card/40 backdrop-blur-sm shadow-xl flex-1 flex flex-col justify-center">
-            <CardContent className="p-6">
+          {/* Active Voice Recorder Card */}
+          <Card className="border-border bg-card/45 backdrop-blur-sm shadow-xl flex-1 flex flex-col">
+            <CardHeader className="pb-2 py-3 px-4 border-b border-border/5">
+              <CardTitle className="text-xs font-bold text-muted-foreground/80 font-outfit uppercase tracking-wider">
+                Active Voice Recorder
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 flex-1 flex flex-col justify-center gap-4">
               <AudioRecorderContainer 
                 onComplete={handleRecordingComplete} 
                 isProcessing={state.status === 'processing'}
                 disabled={state.status === 'playing' || state.status === 'error'}
               />
               {state.status === 'idle' && (
-                <div className="mt-4 text-center">
+                <div className="text-center">
                   <p className="text-[10px] text-muted-foreground leading-relaxed flex items-center justify-center gap-1">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                    <CheckCircle2 className="size-3.5 text-emerald-500" />
                     Examiner is ready. Click microphone and speak.
                   </p>
                 </div>
@@ -225,5 +226,6 @@ export default function TutorSessionContainer({
         </div>
       </div>
     </div>
-  );
+  </>
+);
 }
