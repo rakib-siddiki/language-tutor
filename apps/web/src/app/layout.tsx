@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, Outfit, Geist } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/react';
 import './globals.css';
 import { cn } from "@/components/ui";
 import { ThemeProvider } from '../components/theme-provider';
@@ -48,6 +49,7 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
