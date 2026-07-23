@@ -47,6 +47,26 @@ sequenceDiagram
 
 ---
 
+## 📸 Visual Showcase
+
+### 1. Landing Page
+Clean, modern landing page presenting the core value proposition, key features, and mode options.
+![Landing Page](public/screenshots/landing.png)
+
+### 2. Session Setup & IELTS Speaking Mode
+Interactive configuration interface allowing learners to select conversation mode, customize practice scenarios, configure API keys, and choose neural voices.
+![Session Setup - IELTS Mode](public/screenshots/dashboard-setup.png)
+
+### 3. Business English Roleplay Setup
+Tailored roleplay scenarios for job interviews, client pitch practice, and executive presentations.
+![Business English Mode](public/screenshots/dashboard-business-mode.png)
+
+### 4. Casual Conversation Practice
+Relaxed setting for open-ended discussions, travel topics, and daily conversation practice.
+![Casual Chat Mode](public/screenshots/dashboard-casual-mode.png)
+
+---
+
 ## 🏗️ Monorepo Architecture
 
 This workspace is managed using [Nx](https://nx.dev) and [pnpm workspaces](https://pnpm.io/workspaces) to facilitate shared code and rapid local testing.
