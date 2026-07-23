@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAudioRecorder } from './useAudioRecorder';
 
 interface UseAudioRecorderContainerProps {
@@ -25,6 +25,59 @@ export function useAudioRecorderContainer({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [liveTranscript, setLiveTranscript] = useState('');
+  const recognitionRef = useRef<any>(null);
+
+  // Web Speech API Live Recognition Effect
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    if (isRecording) {
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        recognition.onresult = (event: any) => {
+          let currentText = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            currentText += event.results[i][0].transcript;
+          }
+          setLiveTranscript(currentText);
+        };
+
+        recognition.onerror = (err: any) => {
+          console.warn('SpeechRecognition warning:', err);
+        };
+
+        recognition.start();
+        recognitionRef.current = recognition;
+      } catch (err) {
+        console.warn('Failed to start SpeechRecognition:', err);
+      }
+    } else {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (_) {}
+        recognitionRef.current = null;
+      }
+      setLiveTranscript('');
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (_) {}
+        recognitionRef.current = null;
+      }
+    };
+  }, [isRecording]);
 
   // Set up Canvas Animation Loop
   useEffect(() => {
@@ -148,5 +201,6 @@ export function useAudioRecorderContainer({
     toggleRecording,
     stopRecording,
     buttonClasses,
+    liveTranscript,
   };
 }

@@ -1,10 +1,13 @@
-import { Injectable, BadRequestException } from "@nestjs/common";
+import { Injectable, BadRequestException, MessageEvent } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { Observable } from "rxjs";
 import { GoogleGenAI } from "@google/genai";
 import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
 import {
   TutorRequest,
   TutorResponse,
+  FastTurnResponse,
+  FeedbackResponse,
   ScoreReport,
   ConversationTurn,
 } from "@language-tutor/shared-types";
@@ -12,6 +15,156 @@ import {
 @Injectable()
 export class TutorService {
   constructor(private readonly configService: ConfigService) {}
+
+  /**
+   * Streams the chat response using Gemini stream and RxJS Observable for SSE.
+   */
+  processChatStream(
+    request: TutorRequest & { voice?: string },
+    clientApiKey?: string,
+  ): Observable<MessageEvent> {
+    const { audioBase64, mimeType, history, mode, scenario, voice } = request;
+
+    if (!clientApiKey) {
+      throw new BadRequestException(
+        "Gemini API key is required. Please provide it in the settings panel.",
+      );
+    }
+
+    return new Observable<MessageEvent>((subscriber) => {
+      (async () => {
+        try {
+          const ai = new GoogleGenAI({ apiKey: clientApiKey });
+          const systemInstruction = this.getSystemInstruction(mode, scenario);
+
+          const contents: any[] = [];
+          if (history && history.length > 0) {
+            for (const turn of history) {
+              contents.push({
+                role: turn.role === "user" ? "user" : "model",
+                parts: [{ text: turn.text }],
+              });
+            }
+          }
+
+          const currentParts: any[] = [];
+          if (audioBase64 && mimeType) {
+            currentParts.push({
+              inlineData: {
+                data: audioBase64,
+                mimeType: mimeType,
+              },
+            });
+          }
+
+          currentParts.push({
+            text: "Listen to my audio response (if provided) or read my input. Transcribe it, correct it, offer vocabulary improvements, pronunciation tips, and respond as my tutor.",
+          });
+
+          contents.push({
+            role: "user",
+            parts: currentParts,
+          });
+
+          const responseStream = await ai.models.generateContentStream({
+            model: "gemini-3.1-flash-lite",
+            contents,
+            config: {
+              systemInstruction,
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: "OBJECT",
+                properties: {
+                  userTranscript: { type: "STRING" },
+                  correctedTranscript: { type: "STRING" },
+                  corrections: {
+                    type: "ARRAY",
+                    items: {
+                      type: "OBJECT",
+                      properties: {
+                        original: { type: "STRING" },
+                        corrected: { type: "STRING" },
+                        explanation: { type: "STRING" },
+                      },
+                      required: ["original", "corrected", "explanation"],
+                    },
+                  },
+                  vocabularySuggestions: {
+                    type: "ARRAY",
+                    items: {
+                      type: "OBJECT",
+                      properties: {
+                        original: { type: "STRING" },
+                        suggestion: { type: "STRING" },
+                        context: { type: "STRING" },
+                      },
+                      required: ["original", "suggestion", "context"],
+                    },
+                  },
+                  pronunciationTips: {
+                    type: "ARRAY",
+                    items: {
+                      type: "OBJECT",
+                      properties: {
+                        word: { type: "STRING" },
+                        tip: { type: "STRING" },
+                      },
+                      required: ["word", "tip"],
+                    },
+                  },
+                  tutorText: { type: "STRING" },
+                },
+                required: [
+                  "userTranscript",
+                  "correctedTranscript",
+                  "corrections",
+                  "vocabularySuggestions",
+                  "pronunciationTips",
+                  "tutorText",
+                ],
+              },
+            },
+          });
+
+          let fullText = "";
+          for await (const chunk of responseStream) {
+            if (chunk.text) {
+              fullText += chunk.text;
+              subscriber.next({
+                data: JSON.stringify({ type: "token", text: chunk.text }),
+              } as MessageEvent);
+            }
+          }
+
+          if (fullText) {
+            try {
+              const geminiResult = JSON.parse(fullText);
+              const audioBufferBase64 = await this.synthesizeSpeech(
+                geminiResult.tutorText,
+                voice,
+              );
+
+              subscriber.next({
+                data: JSON.stringify({
+                  type: "complete",
+                  payload: {
+                    ...geminiResult,
+                    audioBase64: audioBufferBase64,
+                  },
+                }),
+              } as MessageEvent);
+            } catch (pErr) {
+              console.error("Error parsing streamed JSON:", pErr);
+            }
+          }
+
+          subscriber.complete();
+        } catch (err) {
+          subscriber.error(err);
+        }
+      })();
+    });
+  }
 
   /**
    * Orchestrates the chat turn:
@@ -160,6 +313,189 @@ export class TutorService {
       throw new BadRequestException(
         `Failed to process conversation turn: ${error.message || error}`,
       );
+    }
+  }
+
+  /**
+   * Pass 1: Generates fast tutor voice response (userTranscript + tutorText + speech)
+   */
+  async processFastTurn(
+    request: TutorRequest & { voice?: string },
+    clientApiKey?: string,
+  ): Promise<FastTurnResponse> {
+    const { audioBase64, mimeType, history, mode, scenario, voice } = request;
+
+    if (!clientApiKey) {
+      throw new BadRequestException(
+        "Gemini API key is required. Please provide it in the settings panel.",
+      );
+    }
+
+    const ai = new GoogleGenAI({ apiKey: clientApiKey });
+    const systemInstruction = this.getSystemInstruction(mode, scenario);
+
+    const contents: any[] = [];
+    if (history && history.length > 0) {
+      for (const turn of history) {
+        contents.push({
+          role: turn.role === "user" ? "user" : "model",
+          parts: [{ text: turn.text }],
+        });
+      }
+    }
+
+    const currentParts: any[] = [];
+    if (audioBase64 && mimeType) {
+      currentParts.push({
+        inlineData: { data: audioBase64, mimeType },
+      });
+    }
+
+    currentParts.push({
+      text: "Listen to my audio response (if provided) or read my input. Transcribe it concisely and respond as my tutor.",
+    });
+
+    contents.push({ role: "user", parts: currentParts });
+
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-flash-lite",
+        contents,
+        config: {
+          systemInstruction,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              userTranscript: { type: "STRING" },
+              tutorText: { type: "STRING" },
+            },
+            required: ["userTranscript", "tutorText"],
+          },
+        },
+      });
+
+      const responseText = response.text;
+      if (!responseText) throw new Error("Empty response from Gemini.");
+      const geminiResult = JSON.parse(responseText);
+
+      const audioBase64 = await this.synthesizeSpeech(geminiResult.tutorText, voice);
+
+      return {
+        userTranscript: geminiResult.userTranscript,
+        tutorText: geminiResult.tutorText,
+        audioBase64,
+      };
+    } catch (error) {
+      console.error("Error processing fast chat turn:", error);
+      throw new BadRequestException(`Failed to process fast turn: ${error.message || error}`);
+    }
+  }
+
+  /**
+   * Pass 2: Asynchronously computes detailed linguistic feedback (corrections, vocabulary, pronunciation)
+   */
+  async processFeedbackAsync(
+    request: TutorRequest,
+    clientApiKey?: string,
+  ): Promise<FeedbackResponse> {
+    const { audioBase64, mimeType, history, mode, scenario } = request;
+
+    if (!clientApiKey) {
+      throw new BadRequestException(
+        "Gemini API key is required. Please provide it in the settings panel.",
+      );
+    }
+
+    const ai = new GoogleGenAI({ apiKey: clientApiKey });
+    const systemInstruction = this.getSystemInstruction(mode, scenario);
+
+    const contents: any[] = [];
+    if (history && history.length > 0) {
+      for (const turn of history) {
+        contents.push({
+          role: turn.role === "user" ? "user" : "model",
+          parts: [{ text: turn.text }],
+        });
+      }
+    }
+
+    const currentParts: any[] = [];
+    if (audioBase64 && mimeType) {
+      currentParts.push({ inlineData: { data: audioBase64, mimeType } });
+    }
+
+    currentParts.push({
+      text: "Analyze my audio input for grammar errors, vocabulary improvements, and pronunciation tips.",
+    });
+
+    contents.push({ role: "user", parts: currentParts });
+
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-flash-lite",
+        contents,
+        config: {
+          systemInstruction,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              userTranscript: { type: "STRING" },
+              correctedTranscript: { type: "STRING" },
+              corrections: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    original: { type: "STRING" },
+                    corrected: { type: "STRING" },
+                    explanation: { type: "STRING" },
+                  },
+                  required: ["original", "corrected", "explanation"],
+                },
+              },
+              vocabularySuggestions: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    original: { type: "STRING" },
+                    suggestion: { type: "STRING" },
+                    context: { type: "STRING" },
+                  },
+                  required: ["original", "suggestion", "context"],
+                },
+              },
+              pronunciationTips: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    word: { type: "STRING" },
+                    tip: { type: "STRING" },
+                  },
+                  required: ["word", "tip"],
+                },
+              },
+            },
+            required: [
+              "userTranscript",
+              "correctedTranscript",
+              "corrections",
+              "vocabularySuggestions",
+              "pronunciationTips",
+            ],
+          },
+        },
+      });
+
+      const responseText = response.text;
+      if (!responseText) throw new Error("Empty feedback response from Gemini.");
+      return JSON.parse(responseText);
+    } catch (error) {
+      console.error("Error processing async feedback:", error);
+      throw new BadRequestException(`Failed to process feedback: ${error.message || error}`);
     }
   }
 

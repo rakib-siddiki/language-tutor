@@ -23,6 +23,7 @@ export default function AudioRecorderContainer({
     isPermissionDenied,
     toggleRecording,
     buttonClasses,
+    liveTranscript,
   } = useAudioRecorderContainer({
     onComplete,
     isProcessing,
@@ -31,16 +32,23 @@ export default function AudioRecorderContainer({
 
   return (
     <div className="flex flex-col items-center justify-center gap-6 w-full">
-      {/* Waveform Canvas */}
-      <div className="w-full h-12 sm:h-20 bg-background/40 backdrop-blur-sm rounded-xl border border-border/30 overflow-hidden relative shadow-inner">
-        <canvas 
-          ref={canvasRef} 
-          className="w-full h-full block" 
-        />
-        {isRecording && (
-          <div className="absolute top-2 right-3 flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-destructive animate-ping" />
-            <span className="text-[10px] uppercase font-bold text-destructive font-outfit">Rec</span>
+      {/* Waveform Canvas & Live Transcript Preview */}
+      <div className="w-full bg-background/40 backdrop-blur-sm rounded-xl border border-border/30 overflow-hidden relative shadow-inner flex flex-col">
+        <div className="w-full h-12 sm:h-20 relative">
+          <canvas 
+            ref={canvasRef} 
+            className="w-full h-full block" 
+          />
+          {isRecording && (
+            <div className="absolute top-2 right-3 flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-destructive animate-ping" />
+              <span className="text-[10px] uppercase font-bold text-destructive font-outfit">Rec</span>
+            </div>
+          )}
+        </div>
+        {isRecording && liveTranscript && (
+          <div className="w-full text-xs text-center text-muted-foreground font-mono bg-muted/20 px-3 py-2 border-t border-border/20 animate-fade-in truncate">
+            "{liveTranscript}..."
           </div>
         )}
       </div>

@@ -46,3 +46,25 @@ export interface TutorResponse {
   audioBase64: string;
   scoreSnapshot?: ScoreReport;
 }
+
+export interface FastTurnResponse {
+  userTranscript: string;
+  tutorText: string;
+  audioBase64: string;
+}
+
+export interface FeedbackResponse {
+  userTranscript: string;
+  correctedTranscript: string;
+  corrections: Array<{
+    original: string;
+    corrected: string;
+    explanation: string;
+  }>;
+  vocabularySuggestions: Array<{
+    original: string;
+    suggestion: string;
+    context: string;
+  }>;
+  pronunciationTips: Array<{ word: string; tip: string }>;
+}
